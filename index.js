@@ -2,7 +2,317 @@ const Discord = require('discord.js');
 const bot = new Discord.Client();
 const config = require('./config.json');
 const command = require('./command.js');
+const servers = bot.guilds;
 const talkedRecently = new Set();
+
+bot.on('ready', () => {
+    bot.user.setPresence({
+        status: 'online',
+        activity: {
+            type: 'PLAYING',
+            name: '-kinfo',
+        },
+    });
+
+    checkRole()
+    clearRole()
+
+    command(bot, ['kinfo', 'Kinfo', 'KINFO'], (message) => {
+        const help = new Discord.MessageEmbed()
+            .setTitle('Список доступных команд:')
+            .setDescription('')
+            .addFields(
+                {
+                    name: "\u200B",
+                    value: "\u200B"
+                },
+                {
+                    name: "Русская Рулетка",
+                    value: "Для ознакомления с полными правилами игры используйте команду **-rrinfo**\n Для запуска игры используйте команду **-rr**"
+                },
+                {
+                    name: "\u200B",
+                    value: "\u200B"
+                },
+                {
+                    name: "Парные команды:",
+                    value: "-simp @userName\n-obey @userName\n-beat @userName\n -kill\n -fuckyou @userName\n",
+                    inline: true
+                },
+                {
+                    name: "Одиночные команды:",
+                    value: "-suicide\n -sad\n-horny\n-flex\n",
+                    inline: true
+                },
+                {
+                    name: "\u200B",
+                    value: "\u200B"
+                },
+                {
+                    name: "Ссылка на приглашение бота:",
+                    value: "[KuroBOT](https://discord.com/oauth2/authorize?client_id=812993383328382996&scope=bot&permissions=0)"
+                },
+                {
+                    name: "\u200B",
+                    value: "\u200B"
+                },
+                {
+                    name: "Последние изменения:",
+                    value: " 09.03 Возвращены команды -suicide и -kill\n Пополнение коллекции horny и simp"
+                },
+                {
+                    name: "\u200B",
+                    value: "\u200B"
+                },
+                {
+                    name: "По всем вопросам работоспособности и функционала бота:",
+                    value: "<@198955830136012801>"
+                }
+            )
+            .setColor('0x0A')
+            .setFooter('Kuropa#0205', 'https://images-ext-1.discordapp.net/external/lJ826P5S3lsZen7tUpKNFcZjhzAfkB6-7ZZBGgURqVU/%3Fsize%3D1024/https/cdn.discordapp.com/avatars/198955830136012801/fc33a16c26398751728d8e9f845664d1.webp?width=468&height=468')
+
+        commandClear(message);
+        message.reply(help);
+    });
+
+    command(bot, ['rrinfo','Rrinfo','RRINFO'], message => {
+        const rrinfo = new Discord.MessageEmbed()
+            .setTitle('Русская рулетка')
+            .setDescription(`Для запуска игры отправьте команду -rr в чат.
+            С вероятностью 16% вы получите пулю, которая назначит вам роль "Russian Roulette" на 10 минут.
+            С вероятностью 1.6% вы получите пулю, которая назначит вам роль "Russian Roulette" на 1 час.
+            Задержка между отправкой команд составляет 5 минут.
+            Информация для Администраторов:
+            Для получения полного спектра удовольствия от игры настройте роль "Russian Roulette" по вашему усмотрению.
+            -ddr Принудительная очистка роли "Russian Roulette". Только для Администраторов.
+            `)
+            .setColor('0x0A')
+        commandClear(message);
+        message.reply(rrinfo);
+    })
+
+    command(bot, ['ping', 'Ping', 'PING'], (message) => {
+        commandClear(message);
+        const timeTaken = Date.now() - message.createdTimestamp;
+        message.channel.send(`Ping ${timeTaken}ms!`);
+    });
+
+    command(bot, ['suicide', 'Suicide', 'SUICIDE', 's'], (message) => {
+        let embed = createSoloAction(message, suicideGif)
+        commandClear(message)
+        message.reply(embed)
+    });
+
+    command(bot, ['sad', 'Sad', 'SAD'], message => {
+        let embed = createSoloAction(message, sadGif)
+        commandClear(message)
+        message.reply(embed)
+    })
+
+    command(bot, ['simp', 'Simp', 'SIMP'], message => {
+        let embed = createDuoAction(message, simpGif)
+        commandClear(message)
+        message.reply(embed)
+    });
+
+    command(bot, ['horny', 'Horny', 'HORNY', 'hr'], message => {
+        let embed = createSoloAction(message, hornyGif)
+        commandClear(message)
+        message.reply(embed)
+    })
+
+    command(bot, ['kill', 'Kill', 'KILL'], message => {
+        let embed = createDuoAction(message, killGif)
+        commandClear(message)
+        message.reply(embed)
+    });
+
+    command(bot, ['fuckyou', 'Fuckyou', 'FUCKYOU', 'fy'], (message) => {
+        let embed = createDuoAction(message, fuckYouGif)
+        commandClear(message)
+        message.reply(embed)
+    });
+
+    command(bot, ['beat', 'Beat', 'BEAT'], message => {
+        let embed = createDuoAction(message, beatGif)
+        commandClear(message)
+        message.reply(embed)
+    });
+
+    command(bot, ['flex', 'Flex', 'FLEX'], message => {
+        let embed = createSoloAction(message, flexGig)
+        commandClear(message)
+        message.reply(embed)
+    });
+
+    command(bot, ['obey', 'Obey', 'OBEY'], message => {
+        let embed = createDuoAction(message, obeyGif)
+        commandClear(message)
+        message.reply(embed)
+    })
+
+    command(bot, ['rr', 'RR', 'кк', 'КК'], message => {
+        if (!message.member.roles.cache.find(r => r.name === 'Russian Roulette')) {
+            if (talkedRecently.has(message.author.id)) {
+                commandClear(message)
+            } else {
+                commandClear(message)
+                let author = message.author;
+                let userToMute = message.member;
+                let muteRole = message.guild.roles.cache.find(r => r.name === 'Russian Roulette');
+                let goldenBullet = 1000 * 60 * 60;
+                let normalBullet = 300 * 1000 * 2;
+                let roll = Math.random() * 100;
+
+                if (roll < 16) {
+                    let bullet = Math.random() * 100;
+                    if (bullet < 10) {
+                        let goldenEmbed = new Discord.MessageEmbed()
+                            .setTitle("Получает Золотую Пулю в висок. Press 'F'.")
+                            .setDescription(`${author} проигрывает в русскую рулетку и отсиживается в муте 1 час.`)
+                            .setImage('https://media.discordapp.net/attachments/814075232448413697/814493049828016128/MpGR.gif')
+                            .setColor('f7f557')
+
+                        userToMute.roles.add(muteRole)
+                        message.reply(goldenEmbed)
+                        author.send("Вы проиграли в Русскую Рулетку. Вы отключены от чата на 1 час. Проведите это время с пользой.");
+                        setTimeout(() => userToMute.roles.remove(muteRole), goldenBullet)
+                    } else {
+                        let text = getRandom(deadText)
+                        let dead = new Discord.MessageEmbed()
+                            .setTitle(text)
+                            .setDescription(`${author} проигрывает в русскую рулетку и отсиживается в муте 10 минут.`)
+                            .setImage('https://images-ext-1.discordapp.net/external/ng_j0ZA8WcSFvtdVg9-nvWOCmWmi86Ty5udL5B-TANo/https/media.discordapp.net/attachments/812992770356543501/818490309502697492/20210308_172756.gif')
+                            .setColor('ff0000')
+
+                        userToMute.roles.add(muteRole)
+                        message.reply(dead)
+                        setTimeout(() => userToMute.roles.remove(muteRole), normalBullet)
+                    }
+                } else {
+                    let text = getRandom(aliveText)
+                    let alive = new Discord.MessageEmbed()
+                        .setTitle(text)
+                        .setDescription(`${author} побеждает в русской рулетке, пока что...`)
+                        .setImage('')
+                        .setColor('BLACK')
+
+                    message.reply(alive)
+                }
+                talkedRecently.add(message.author.id);
+                setTimeout(() => {
+                    talkedRecently.delete(message.author.id);
+                }, 300 * 1000);
+            }
+        } else {
+            commandClear(message)
+        }
+    });
+
+    command(bot, 'ddr', message => {
+        commandClear(message)
+        if (message.member.hasPermission('KICK_MEMBERS')) {
+            let muteRole = message.guild.roles.cache.find(r => r.name === 'Russian Roulette');
+            let members = muteRole.members
+            members.forEach(member => {
+                member.roles.remove(muteRole)
+                console.log(`Роль ${muteRole} удалена у пользователя ${member.user.username}`)
+            })
+
+        } else {
+            message.reply(`Вы не администратор.`)
+        }
+    })
+});
+
+
+const checkRole = () => {
+    servers.cache.forEach(server => {
+        let id = server.id
+        let guild = bot.guilds.cache.get(id).roles
+        let muteRole = guild.cache.find(role => role.name === 'Russian Roulette')
+        if (muteRole) {
+            let members = muteRole.members
+            members.forEach(member => {
+                member.roles.remove(muteRole)
+            })
+            console.log(`Чистилище пусто, можно играть в Русскую Рулетку!`);
+        } else {
+            guild.create({
+                data: {
+                    name: 'Russian Roulette',
+                    color: 'GRAY',
+                },
+            })
+                .then(console.log)
+                .catch(console.error);
+        }
+        if (guild.cache.find(role => role.name === 'WINNER')) {
+            console.log(`Победитель найден!`);
+        } else {
+            guild.create({
+                data: {
+                    name: 'WINNER',
+                    color: 'GOLD',
+                },
+            })
+                .then(console.log)
+                .catch(console.error);
+        }
+    })
+}
+const clearRole = () => {
+    servers.cache.forEach(server => {
+        let id = server.id
+        let guild = bot.guilds.cache.get(id).roles
+        let muteRole = guild.cache.find(r => r.name === 'Russian Roulette');
+        let members = muteRole.members
+        members.forEach(member => {
+            member.roles.remove(muteRole)
+            console.log(`Роль ${muteRole} удалена у пользователя ${member.user.username}`)
+        })
+    })
+}
+
+const createSoloAction = (message, arr) => {
+    let author = message.author;
+    let item = getRandom(arr);
+    const embed = new Discord.MessageEmbed()
+        .setDescription(`${author} ${item.text}`)
+        .setImage(item.img)
+        .setColor('0x0A')
+    return embed
+}
+
+const createDuoAction = (message, arr) => {
+    let author = message.author;
+    let target = message.mentions.members.first();
+    if (!message.mentions.members.first() || message.mentions.members.first().id === message.author.id) {
+        const embed = new Discord.MessageEmbed()
+            .setDescription(`${author} укажите цель.`)
+            .setColor('0x0A')
+        return embed
+    } else {
+        let item = getRandom(arr);
+        let embed = new Discord.MessageEmbed()
+            .setDescription(`${author} ${item.text} ${target}`)
+            .setImage(item.img)
+            .setColor('0x0A')
+        return embed
+    }
+};
+
+const getRandom = (arr) => {
+    let index = Math.floor(Math.random() * arr.length);
+    return arr[index]
+}
+
+const commandClear = (message) => {
+    message.delete()
+        .then(msg => console.log(`Deleted message from ${msg.author.username} command: ${msg.content}`))
+        .catch(console.error);
+};
 
 const suicideGif = [
     {
@@ -72,10 +382,6 @@ const suicideGif = [
     {
         img: 'https://cdn.discordapp.com/attachments/813164101731090452/813176070266290176/ezgif-2-5e8274138e61.gif',
         text: 'скрепляет кровью сделку со смертью.'
-    },
-    {
-        img: 'https://cdn.discordapp.com/attachments/813164101731090452/813170041796427807/ezgif-7-7e35644e4a63.gif',
-        text: 'без тени сомнения проводит ножом по венам.'
     },
     {
         img: 'https://data.whicdn.com/images/236330260/original.gif',
@@ -150,6 +456,42 @@ const simpGif = [
     {
         img: 'https://media.discordapp.net/attachments/813353699304538143/813432522645176360/giphy.gif',
         text: 'сверкающими глазами смотрит на'
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813353699304538143/817524074116153364/20210306_012822.gif",
+        text: "рассказывает о своих сладких мечтах милому"
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813353699304538143/817524598077784085/giphy_1.gif",
+        text: "делится своими влажными фантазиями с"
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813353699304538143/817524672127827988/tenor_3.gif",
+        text: "не видит никого кроме"
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813353699304538143/817524720076849152/tenor_2.gif",
+        text: "смущается при виде"
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813353699304538143/818579986780782642/tenor_3.gif",
+        text: "замечает своего симпа"
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813353699304538143/818580026726940712/tenor_2.gif",
+        text: "не видит никого кроме"
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813353699304538143/818580143030403082/tenor_1.gif",
+        text: "хочет как можно больше прикасаться"
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813353699304538143/818583272488960040/20210308_233718.gif",
+        text: "влюбленно смотрит на"
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813353699304538143/818583304814854174/20210308_233530.gif",
+        text: "радуется сообщению от"
     },
 ]
 const fuckYouGif = [
@@ -413,10 +755,10 @@ const flexGig = [
         img: 'https://media.discordapp.net/attachments/813757848788926484/813866801414668288/4123431.gif',
         text: 'затмевает собой солнце.'
     },
-    // {
-    //     img: 'https://images-ext-1.discordapp.net/external/_yLUAASE9jbCB7jgtpGrEo0PLmzIqReANByEWJPeBR0/https/cutandjacked.com/sites/default/files/images/articles/Tribute_Franco_Columbu/Tribute-Franco-Columbu-1.gif',
-    //     text: 'удалил себе пару рёбер.'
-    // },
+    {
+        img: 'https://media.discordapp.net/attachments/815295616829489172/818220284875505714/c1e.gif',
+        text: 'ебанул кашу "Геркулес"'
+    },
     {
         img: 'https://media.discordapp.net/attachments/813757848788926484/813866879134859334/26.gif',
         text: 'сам не может поверить в то, насколько он крут.'
@@ -484,6 +826,10 @@ const flexGig = [
     {
         img: 'https://media.discordapp.net/attachments/813758043010498591/813869288796455013/4567.gif?width=627&height=468',
         text: 'стал Мистером Вселенная ради флекса.'
+    },
+    {
+        img: 'https://media.discordapp.net/attachments/813758043010498591/818602175944458262/tenor_1.gif',
+        text: ', Куропа, залогинься'
     }
 ]
 const obeyGif = [
@@ -539,6 +885,10 @@ const obeyGif = [
         img: 'https://images-ext-2.discordapp.net/external/WcXUe1S_C1TQyrrBIqHx4l2IEukduujx8CXT_G_bB9I/https/media.discordapp.net/attachments/813429324706873344/813448392276836383/193757.gif',
         text: 'любит пoжёcтчe наслаждаться телом'
     },
+    {
+        img: "https://media.discordapp.net/attachments/813450632328773673/817526516279672882/giphy_1.gif",
+        text: "связав, держит в своем подвале, бедняжку"
+    }
 ]
 const beatGif = [
     {
@@ -872,7 +1222,8 @@ const hornyGif = [
     {
         img: 'https://images-ext-1.discordapp.net/external/GEziXIiB1fyAIwjeXQmPBv1VgKhVUKY93R097fXmflk/%3Fitemid%3D20558137/https/media1.tenor.com/images/f11d35de952baa84f42df54492b09c8d/tenor.gif',
         text: 'пришел с салфетками и готов убить чат.'
-    }, {
+    },
+    {
         img: 'https://images-ext-2.discordapp.net/external/PHZEgUiooF0ac9gyQzJXw3GlGav2ZcCQzLPYXxuq95s/%3Fitemid%3D16556305/https/media1.tenor.com/images/347d9b15ed6f7983d9807278f6aa12b2/tenor.gif',
         text: 'уходит в мир сексуальных фантазий.'
     },
@@ -935,6 +1286,82 @@ const hornyGif = [
         img: 'https://images-ext-2.discordapp.net/external/1deIZWOBSLkQgW4nYhDVZ8zPbvVkk9NEcSFptmNT97k/%3Fitemid%3D20370777/https/media1.tenor.com/images/f920d4a08057cf24cba675e27b306b03/tenor.gif',
         text: 'я понимаю, что ты отчаялся, но не сношать же стены.'
     },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/817521701406638111/giphy_1.gif",
+        text: "пришлось связать, что бы остановить всплеск похоти."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/817522655771099206/giphy-5_1.gif",
+        text: "облизывается вспоминая вчерашнюю ночь."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/817522656076365895/giphy-3_1.gif",
+        text: "приманивает к себе."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/817522656466829372/giphy-4_1.gif",
+        text: "играет с душем."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/817522656999899166/giphy-2_1.gif",
+        text: "тяжело дышит, от чего?"
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/817523406366572594/tenor_8.gif",
+        text: "больше не контролирует свою похоть."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/817523407079997440/tenor_7.gif",
+        text: "гладит свой \"хвостик\"."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/817523429468798986/tenor_5.gif",
+        text: "рефлекторно повторяет заученные движения."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/817523431581941810/tenor_4.gif",
+        text: "любит быть сверху."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/817523432060616724/tenor_3.gif",
+        text: "соблазнительно танцует демонстрируя свое тело."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/818612382954684426/tenor_9.gif",
+        text: "делится своими фантазиями."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/818612445584031795/tenor_8.gif",
+        text: "в предвкушении времени для игр."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/818612483727818782/tenor_7.gif",
+        text: "ждет дикпиков в лс."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/818612517383045181/tenor_6.gif",
+        text: "тонет в развратных мыслях."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/818612566317072404/tenor_5.gif",
+        text: "предлагает перейти от слов к действию."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/818612604901261322/tenor_4.gif",
+        text: "сходит с ума от похоти."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/818613517842251776/20210309_013725.gif",
+        text: "по тихому трогает девочек в чате."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/818617764603363368/20210309_015351.gif",
+        text: "уже в полной готовности."
+    },
+    {
+        img: "https://media.discordapp.net/attachments/813461887856803880/818618472203812864/20210309_015640.gif",
+        text: "ждет своего саба для команды -obey."
+    },
 ]
 
 const deadText = [
@@ -979,7 +1406,7 @@ const aliveText = [
     'Нажимая на спусковой крючок жаждет смерти, однако его надеждам не суждено сбыться.',
     'Истерично смеётся бросая не выстреливший револьвер на землю.',
     'Лишается возможности покинуть этот мир.',
-    'Ещё как минимум минуту будет отравлять воздух своим присутствием.',
+    'Ещё некоторое время будет отравлять воздух своим присутствием.',
     'После металлического звука продолжает тяжело дышать.',
     'Радуйся, твоё омерзительное существование продолжается.',
     'Очень жаль, но ты выжил.',
@@ -987,253 +1414,5 @@ const aliveText = [
     'Мда уж, кто там следующий?',
     'Ну, раз ты остаёшься с нами, можешь вынести следующий труп?',
 ]
-
-bot.on('ready', () => {
-    bot.user.setPresence({
-        status: 'online',
-        activity: {
-            type: 'PLAYING',
-            name: '-kinfo',
-        },
-    });
-
-    checkDedRole()
-
-    command(bot, ['kinfo', 'Kinfo', 'KINFO'], (message) => {
-        const help = new Discord.MessageEmbed()
-            .setTitle('Список доступных команд:')
-            .setDescription(`
-                -suicide\n
-                -sad\n
-                -simp @userName\n
-                -horny\n
-                -obey @username\n
-                -beat @userName\n
-                -kill @userName\n
-                -fuckyou @userName or -fy @userName\n
-                -flex\n
-                -rrinfo (Правила игры в Русскую Рулетку)\n
-                -rr (Запуск игры Русская Рулетка)\n
-                `)
-            .setColor('0x0A')
-
-        commandClear(message);
-        message.reply(help);
-    });
-
-    command(bot, ['rrinfo','Rrinfo','RRINFO'], message => {
-        const rrinfo = new Discord.MessageEmbed()
-            .setTitle('Русская рулетка')
-            .setDescription(`Для запуска игры отправьте команду -rr в чат.
-            С вероятностью 16% вы получите пулю, которая назначит вам роль "Russian Roulette" на 5 минут.
-            С вероятностью 1.6% вы получите пулю, которая назначит вам роль "Russian Roulette" на 1 час.
-            Информация для Администраторов:
-            Для получения полного спектра удовольствия от игры настройте роль "Russian Roulette" по вашему усмотрению.
-            -ddr Принудительная очистка роли "Russian Roulette". Только для Администраторов.
-            `)
-            .setColor('0x0A')
-        commandClear(message);
-        message.reply(rrinfo);
-    })
-
-    command(bot, ['ping', 'Ping', 'PING'], (message) => {
-        commandClear(message);
-        const timeTaken = Date.now() - message.createdTimestamp;
-        message.channel.send(`Ping ${timeTaken}ms!`);
-    });
-
-    command(bot, ['suicide', 'Suicide', 'SUICIDE', 's'], (message) => {
-        let embed = createSoloAction(message, suicideGif)
-        commandClear(message)
-        message.reply(embed)
-    });
-
-    command(bot, ['sad', 'Sad', 'SAD'], message => {
-        let embed = createSoloAction(message, sadGif)
-        commandClear(message)
-        message.reply(embed)
-    })
-
-    command(bot, ['simp', 'Simp', 'SIMP'], message => {
-        let embed = createDuoAction(message, simpGif)
-        commandClear(message)
-        message.reply(embed)
-    });
-
-    command(bot, ['horny', 'Horny', 'HORNY', 'hr'], message => {
-        let embed = createSoloAction(message, hornyGif)
-        commandClear(message)
-        message.reply(embed)
-    })
-
-    command(bot, ['kill', 'Kill', 'KILL'], message => {
-        let embed = createDuoAction(message, killGif)
-        commandClear(message)
-        message.reply(embed)
-    });
-
-    command(bot, ['fuckyou', 'Fuckyou', 'FUCKYOU', 'fy'], (message) => {
-        let embed = createDuoAction(message, fuckYouGif)
-        commandClear(message)
-        message.reply(embed)
-    });
-
-    command(bot, ['beat', 'Beat', 'BEAT'], message => {
-        let embed = createDuoAction(message, beatGif)
-        commandClear(message)
-        message.reply(embed)
-    });
-
-    command(bot, ['flex', 'Flex', 'FLEX'], message => {
-        let embed = createSoloAction(message, flexGig)
-        commandClear(message)
-        message.reply(embed)
-    });
-
-    command(bot, ['obey', 'Obey', 'OBEY'], message => {
-        let embed = createDuoAction(message, obeyGif)
-        commandClear(message)
-        message.reply(embed)
-    })
-
-    command(bot, ['rr', 'RR', 'кк', 'КК'], message => {
-        if (!message.member.roles.cache.find(r => r.name === 'Russian Roulette')) {
-            if (talkedRecently.has(message.author.id)) {
-                commandClear(message)
-
-            } else {
-                commandClear(message)
-                let author = message.author;
-                let userToMute = message.member;
-                let muteRole = message.guild.roles.cache.find(r => r.name === 'Russian Roulette');
-                let goldenBullet = 1000 * 60 * 60;
-                let normalBullet = 300 * 1000;
-                let roll = Math.random() * 100;
-
-                if (roll < 16) {
-                    let bullet = Math.random() * 100;
-                    if (bullet < 10) {
-                        let goldenEmbed = new Discord.MessageEmbed()
-                            .setTitle("Получает Золотую Пулю в висок. Press 'F'.")
-                            .setDescription(`${author} проигрывает в русскую рулетку и отсиживается в муте 1 час.`)
-                            .setImage('https://media.discordapp.net/attachments/814075232448413697/814493049828016128/MpGR.gif')
-                            .setColor('f7f557')
-
-                        userToMute.roles.add(muteRole)
-                        message.reply(goldenEmbed)
-                        author.send("Вы проиграли в Русскую Рулетку. Вы отключены от чата на 1 час. Проведите это время с пользой.");
-                        setTimeout(() => userToMute.roles.remove(muteRole), goldenBullet)
-                    } else {
-                        let text = getRandom(deadText)
-                        let dead = new Discord.MessageEmbed()
-                            .setTitle(text)
-                            .setDescription(`${author} проигрывает в русскую рулетку и отсиживается в муте 5 минут.`)
-                            .setImage('https://media.discordapp.net/attachments/814075232448413697/814233878318809098/1560682692_tumblr_o1z100MQBP1tm0tuwo1_500.gif')
-                            .setColor('ff0000')
-
-                        userToMute.roles.add(muteRole)
-                        message.reply(dead)
-                        setTimeout(() => userToMute.roles.remove(muteRole), normalBullet)
-                    }
-                } else {
-                    let text = getRandom(aliveText)
-                    let alive = new Discord.MessageEmbed()
-                        .setTitle(text)
-                        .setDescription(`${author} побеждает в русской рулетке, пока что...`)
-                        .setImage('')
-                        .setColor('BLACK')
-
-                    message.reply(alive)
-                }
-                talkedRecently.add(message.author.id);
-                setTimeout(() => {
-                    talkedRecently.delete(message.author.id);
-                }, 60000);
-            }
-        } else {
-            commandClear(message)
-        }
-    });
-
-    command(bot, 'ddr', message => {
-        commandClear(message)
-        if (message.member.hasPermission('KICK_MEMBERS')) {
-            let muteRole = message.guild.roles.cache.find(r => r.name === 'Russian Roulette');
-            let members = muteRole.members
-            members.forEach(member => {
-                member.roles.remove(muteRole)
-                console.log(`Роль ${muteRole} удалена у пользователя ${member.user.username}`)
-            })
-
-        } else {
-            message.reply(`Вы не администратор.`)
-        }
-    })
-});
-
-
-const checkDedRole = () => {
-    const servers = bot.guilds
-    servers.cache.forEach(server => {
-        let id = server.id
-        let guild = bot.guilds.cache.get(id).roles
-
-        if (guild.cache.find(role => role.name === 'Russian Roulette')) {
-            console.log(`Чистилище найдено, можно играть в Русскую Рулетку!`);
-        } else {
-            guild.create({
-                data: {
-                    name: 'Russian Roulette',
-                    color: 'GRAY',
-                },
-            })
-                .then(console.log)
-                .catch(console.error);
-        }
-    })
-}
-
-const createRole = () => {
-
-}
-
-const createSoloAction = (message, arr) => {
-    let author = message.author;
-    let item = getRandom(arr);
-    const embed = new Discord.MessageEmbed()
-        .setDescription(`${author} ${item.text}`)
-        .setImage(item.img)
-        .setColor('0x0A')
-    return embed
-}
-
-const createDuoAction = (message, arr) => {
-    let author = message.author;
-    let target = message.mentions.members.first();
-    if (!message.mentions.members.first() || message.mentions.members.first().id === message.author.id) {
-        const embed = new Discord.MessageEmbed()
-            .setDescription(`${author} укажите цель.`)
-            .setColor('0x0A')
-        return embed
-    } else {
-        let item = getRandom(arr);
-        let embed = new Discord.MessageEmbed()
-            .setDescription(`${author} ${item.text} ${target}`)
-            .setImage(item.img)
-            .setColor('0x0A')
-        return embed
-    }
-};
-
-const getRandom = (arr) => {
-    let index = Math.floor(Math.random() * arr.length);
-    return arr[index]
-}
-
-const commandClear = (message) => {
-    message.delete()
-        .then(msg => console.log(`Deleted message from ${msg.author.username} command: ${msg.content}`))
-        .catch(console.error);
-};
 
 bot.login(config.token);
