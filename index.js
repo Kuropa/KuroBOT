@@ -48,10 +48,10 @@ bot.on('ready', () => {
                     name: "\u200B",
                     value: "\u200B"
                 },
-                {
-                    name: "Ссылка на приглашение бота:",
-                    value: "[KuroBOT](https://discord.com/oauth2/authorize?client_id=812993383328382996&scope=bot&permissions=0)"
-                },
+                // {
+                //     name: "Ссылка на приглашение бота:",
+                //     value: "[KuroBOT](https://discord.com/oauth2/authorize?client_id=812993383328382996&scope=bot&permissions=0)"
+                // },
                 {
                     name: "\u200B",
                     value: "\u200B"
