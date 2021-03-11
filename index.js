@@ -53,12 +53,20 @@ bot.on('ready', () => {
                 //     value: "[KuroBOT](https://discord.com/oauth2/authorize?client_id=812993383328382996&scope=bot&permissions=0)"
                 // },
                 {
+                    name: "Добавление опроса:",
+                    value: "Вы можете создать общественный опрос.\n" +
+                        "Добавить опрос можно воспользовавшись шаблоном: **-ask Вопрос? Ответ, Ответ, Ответ\n" +
+                        "Количество ответов не может превышать 10, в указании ответов недопустимо использование знака вопроса."
+                },
+                {
                     name: "\u200B",
                     value: "\u200B"
                 },
                 {
                     name: "Последние изменения:",
-                    value: " 09.03 Возвращены команды -suicide и -kill\n Пополнение коллекции horny и simp"
+                    value: " 09.03 Возвращены команды **-suicide** и **-kill**\n " +
+                        "Пополнение коллекции **horny** и **simp**\n" +
+                        "11.03 Добавлена команда **-ask**"
                 },
                 {
                     name: "\u200B",
@@ -224,6 +232,36 @@ bot.on('ready', () => {
             message.reply(`Вы не администратор.`)
         }
     })
+
+    command(bot, ['ask', 'Ask', 'ASK', 'фыл'], message => {
+        commandClear(message)
+        const emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
+        let survey = [];
+        let messageArr = message.content.split(' ');
+        messageArr.splice(0, 1);
+        let msg = messageArr.toString()
+        let question = msg.split('?')[0]
+            .replace(/,/g,' ');
+        let answersArr = msg.split('?')[1]
+            .split(',,');
+        answersArr = answersArr.map(i => i.split(',').filter(x => x.trim()).join().replace(/,/g,' '))
+
+        for (let i = 0; i < answersArr.length; i++) {
+            survey.push(emojis[i] + answersArr[i])
+        }
+
+        //survey.join('\n')
+
+        let surveyEmbed = new Discord.MessageEmbed()
+            .setTitle(`${question}?`)
+            .setDescription(survey)
+
+        message.channel.send({ embed: surveyEmbed }).then(embedMessage => {
+            for (let i = 0; i < survey.length; i++) {
+                embedMessage.react(`${emojis[i]}`)
+            }
+        })
+    })
 });
 
 
@@ -262,6 +300,7 @@ const checkRole = () => {
         }
     })
 }
+
 const clearRole = () => {
     servers.cache.forEach(server => {
         let id = server.id
